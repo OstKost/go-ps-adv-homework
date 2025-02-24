@@ -19,6 +19,7 @@ func NewRandomHandler(router *http.ServeMux) {
 
 func (handler RandomHandler) random() http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
+                 rand.Seed(time.Now().UnixNano())
 		const maxRandom = 6
 		number := rand.IntN(maxRandom) + 1 // min 1
 		strNumber := strconv.Itoa(number)
