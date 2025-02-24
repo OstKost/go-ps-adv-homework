@@ -26,6 +26,7 @@ func (handler RandomHandler) random() http.HandlerFunc {
 		_, err := writer.Write([]byte(strNumber))
 		if err != nil {
 			log.Println(err)
+			 http.Error(writer, "Internal Server Error", http.StatusInternalServerError)
 		}
 
 	}
