@@ -41,6 +41,12 @@ func (handler RandomHandler) randomMax() http.HandlerFunc {
 			http.Error(writer, "Invalid path", http.StatusBadRequest)
 			return
 		}
+               if len(parts) == 0 || parts[0] == "" {
+			http.Error(writer, "Некорректный путь: отсутствует максимальное случайное число", 
+                          http.StatusBadRequest)
+			return
+		}
+
 
 		// Преобразуем строку в int
 		maxRandom, err := strconv.Atoi(parts[0])
