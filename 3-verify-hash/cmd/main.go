@@ -5,12 +5,14 @@ import (
 	"go-ps-adv-homework/configs"
 	"go-ps-adv-homework/internal/auth"
 	"go-ps-adv-homework/internal/verify"
+	"go-ps-adv-homework/pkg/db"
 	"log"
 	"net/http"
 )
 
 func main() {
 	conf := configs.LoadConfig()
+	_ = db.NewDB(conf)
 
 	router := http.NewServeMux()
 	auth.NewAuthHandler(router, auth.HandlerDependencies{

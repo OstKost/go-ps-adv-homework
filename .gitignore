@@ -22,11 +22,11 @@ go.work
 go.work.sum
 
 # env file
-.env
+3-verify-hash/.env
 
 # ide
 .idea
 .gigaide
 
 # db
-postgres_data
+postgres-data
