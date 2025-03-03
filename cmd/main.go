@@ -5,19 +5,20 @@ import (
 	"go-ps-adv-homework/configs"
 	"go-ps-adv-homework/internal/auth"
 	"go-ps-adv-homework/internal/verify"
+	"go-ps-adv-homework/pkg/hashes"
 	"log"
 	"net/http"
 )
 
 func main() {
 	conf := configs.LoadConfig()
+	h := hashes.New()
 
 	router := http.NewServeMux()
-	auth.NewAuthHandler(router, auth.HandlerDependencies{
+	auth.NewAuthHandler(router)
+	verify.NewVerifyHandler(router, verify.VerifyHandlerDependencies{
 		Config: conf,
-	})
-	verify.NewVerifyHandler(router, verify.HandlerDependencies{
-		Config: conf,
+		Hashes: h,
 	})
 
 	server := http.Server{

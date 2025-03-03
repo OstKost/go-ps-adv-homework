@@ -2,50 +2,39 @@ package auth
 
 import (
 	"fmt"
-	"go-ps-adv-homework/configs"
 	"go-ps-adv-homework/pkg/request"
 	"go-ps-adv-homework/pkg/response"
 	"net/http"
 )
 
-type handler struct {
-	Config *configs.Config
-}
+type authHandler struct{}
 
-type HandlerDependencies struct {
-	*configs.Config
-}
-
-func NewAuthHandler(router *http.ServeMux, dependencies HandlerDependencies) {
-	handler := &handler{
-		Config: dependencies.Config,
-	}
+func NewAuthHandler(router *http.ServeMux) {
+	handler := &authHandler{}
 	router.HandleFunc("POST /auth/register", handler.Register())
 	router.HandleFunc("POST /auth/login", handler.Login())
 }
 
-func (handler *handler) Register() http.HandlerFunc {
+func (handler *authHandler) Register() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		body, err := request.HandleBody[RegisterRequest](&w, req)
 		if err != nil {
-			response.Json(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		fmt.Println(body)
-		res := LoginResponse{Token: handler.Config.Auth.Secret}
-		response.Json(w, res, http.StatusCreated)
+		fmt.Println(body) // пока не используем
+		res := LoginResponse{Token: "1234567890"}
+		response.Json(w, res, http.StatusOK)
 	}
 }
 
-func (handler *handler) Login() http.HandlerFunc {
+func (handler *authHandler) Login() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := request.HandleBody[LoginRequest](&w, r)
 		if err != nil {
-			response.Json(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		fmt.Println(body)
-		res := LoginResponse{Token: handler.Config.Auth.Secret}
+		res := LoginResponse{Token: "1234567890"}
 		response.Json(w, res, http.StatusCreated)
 	}
 }

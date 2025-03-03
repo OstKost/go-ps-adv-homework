@@ -29,4 +29,4 @@ go.work.sum
 .gigaide
 
 # db
-postgres_data
+postgres-data
