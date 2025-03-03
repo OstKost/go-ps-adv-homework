@@ -11,12 +11,24 @@ type Link struct {
 	Hash string `json:"hash" gorm:"unique_index"`
 }
 
+type CreateLinkRequest struct {
+	Url string `json:"url" validate:"required,url"`
+}
+
+type UpdateLinkRequest struct {
+	Url  string `json:"url" validate:"required,url"`
+	Hash string `json:"hash" validate:"omitempty,len=10"`
+}
+
 func NewLink(url string) *Link {
+	link := &Link{Url: url}
+	link.GenerateHash()
+	return link
+}
+
+func (link *Link) GenerateHash() {
 	const hashLen = 10
-	return &Link{
-		Url:  url,
-		Hash: RandStringRunes(hashLen),
-	}
+	link.Hash = RandStringRunes(hashLen)
 }
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
