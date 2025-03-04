@@ -2,6 +2,7 @@ package products
 
 import (
 	"go-ps-adv-homework/configs"
+	"go-ps-adv-homework/pkg/middleware"
 	"go-ps-adv-homework/pkg/request"
 	"go-ps-adv-homework/pkg/response"
 	"gorm.io/gorm"
@@ -24,9 +25,9 @@ func NewProductsHandler(router *http.ServeMux, dependencies ProductsHandlerDepen
 		Config:             dependencies.Config,
 		ProductsRepository: dependencies.ProductsRepository,
 	}
-	router.HandleFunc("POST /products", handler.createProduct())
-	router.HandleFunc("PATCH /products/{productId}", handler.updateProduct())
-	router.HandleFunc("DELETE /products/{productId}", handler.deleteProduct())
+	router.Handle("POST /products", middleware.IsAuthed(handler.createProduct()))
+	router.Handle("PATCH /products/{productId}", middleware.IsAuthed(handler.updateProduct()))
+	router.Handle("DELETE /products/{productId}", middleware.IsAuthed(handler.deleteProduct()))
 	router.HandleFunc("GET /products", handler.findProducts())
 	router.HandleFunc("GET /products/{productId}", handler.getProductById())
 }

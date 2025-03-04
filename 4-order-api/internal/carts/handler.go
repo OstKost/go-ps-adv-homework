@@ -3,6 +3,7 @@ package carts
 import (
 	"fmt"
 	"go-ps-adv-homework/configs"
+	"go-ps-adv-homework/pkg/middleware"
 	"net/http"
 )
 
@@ -18,9 +19,9 @@ func NewHandler(router *http.ServeMux, dependencies HandlerDependencies) {
 	handler := &handler{
 		Config: dependencies.Config,
 	}
-	router.HandleFunc("POST /carts", handler.createCart())
-	router.HandleFunc("GET /carts/{cartId}", handler.getById())
-	router.HandleFunc("GET /carts/user/{userId}", handler.getByUserId())
+	router.Handle("POST /carts", middleware.IsAuthed(handler.createCart()))
+	router.Handle("GET /carts/{cartId}", middleware.IsAuthed(handler.getById()))
+	router.Handle("GET /carts/user/{userId}", middleware.IsAuthed(handler.getByUserId()))
 }
 
 func (handler *handler) createCart() http.HandlerFunc {
