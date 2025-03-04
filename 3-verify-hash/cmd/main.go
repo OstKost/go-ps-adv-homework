@@ -7,6 +7,7 @@ import (
 	"go-ps-adv-homework/internal/link"
 	"go-ps-adv-homework/internal/verify"
 	"go-ps-adv-homework/pkg/db"
+	"go-ps-adv-homework/pkg/middleware"
 	"log"
 	"net/http"
 )
@@ -18,15 +19,22 @@ func main() {
 	// Repos
 	linkRepository := link.NewLinkRepository(database)
 
-	//Handlers
+	// Handlers
 	router := http.NewServeMux()
 	auth.NewAuthHandler(router, auth.HandlerDependencies{Config: conf})
 	verify.NewVerifyHandler(router, verify.HandlerDependencies{Config: conf})
 	link.NewLinkHandler(router, link.HandlerDependencies{Repository: linkRepository})
 
+	// Middlewares
+	stack := middleware.Chain(
+		middleware.Logger,
+		middleware.CORS,
+	)
+
 	server := http.Server{
-		Addr:    fmt.Sprintf("%s:%s", conf.Server.Host, conf.Server.Port),
-		Handler: router,
+		Addr: fmt.Sprintf("%s:%s", conf.Server.Host, conf.Server.Port),
+		//Handler: middleware.CORS(middleware.Logger(router)),
+		Handler: stack(router),
 	}
 
 	log.Printf("Server is listening on %s:%s", conf.Server.Host, conf.Server.Port)

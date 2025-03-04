@@ -1,6 +1,7 @@
 package link
 
 import (
+	"go-ps-adv-homework/pkg/middleware"
 	"go-ps-adv-homework/pkg/request"
 	"go-ps-adv-homework/pkg/response"
 	"gorm.io/gorm"
@@ -24,7 +25,7 @@ func NewLinkHandler(router *http.ServeMux, dependencies HandlerDependencies) {
 	router.HandleFunc("POST /link", handler.CreateLink())
 	router.HandleFunc("GET /{hash}", handler.GoToLink())
 	router.HandleFunc("GET /link", handler.GetList())
-	router.HandleFunc("PATCH /link/{linkId}", handler.UpdateLink())
+	router.Handle("PATCH /link/{linkId}", middleware.IsAuthed(handler.UpdateLink()))
 	router.HandleFunc("DELETE /link/{linkId}", handler.DeleteLink())
 }
 
