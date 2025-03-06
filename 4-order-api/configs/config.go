@@ -53,8 +53,8 @@ func LoadConfig() *Config {
 }
 
 func getEnvWithDefault(key, defaultValue string) string {
-	value := os.Getenv(key)
-	if value == "" {
+	value, exists := os.LookupEnv(key)
+	if !exists {
 		return defaultValue
 	}
 	return value
