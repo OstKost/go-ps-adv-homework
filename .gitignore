@@ -30,3 +30,9 @@ go.work.sum
 
 # db
 postgres-data
+
+# output
+dist
+
+# env
+.env
