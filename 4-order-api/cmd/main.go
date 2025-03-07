@@ -20,12 +20,12 @@ func main() {
 
 	// Handlers
 	router := http.NewServeMux()
-	auth.NewHandler(router, auth.HandlerDependencies{Config: config})
+	auth.NewHandler(router, auth.AuthHandlerDependencies{Config: config})
 	products.NewProductsHandler(router, products.ProductsHandlerDependencies{
 		Config:             config,
 		ProductsRepository: productsRepository,
 	})
-	carts.NewHandler(router, carts.HandlerDependencies{Config: config})
+	carts.NewHandler(router, carts.CartHandlerDependencies{Config: config})
 
 	// Middleware
 	stack := middleware.Chain(

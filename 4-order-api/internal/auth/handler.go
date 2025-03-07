@@ -10,18 +10,18 @@ import (
 	"net/http"
 )
 
-type handler struct {
+type authHandler struct {
 	Config *configs.Config
 }
 
-type HandlerDependencies struct {
+type AuthHandlerDependencies struct {
 	*configs.Config
 }
 
 var codes []string
 
-func NewHandler(router *http.ServeMux, dependencies HandlerDependencies) {
-	handler := &handler{
+func NewHandler(router *http.ServeMux, dependencies AuthHandlerDependencies) {
+	handler := &authHandler{
 		Config: dependencies.Config,
 	}
 	router.HandleFunc("POST /auth/authByPhone", handler.authByPhone())
@@ -29,7 +29,7 @@ func NewHandler(router *http.ServeMux, dependencies HandlerDependencies) {
 	router.HandleFunc("POST /auth/verifyCode", handler.verifyCode())
 }
 
-func (handler *handler) authByPhone() http.HandlerFunc {
+func (handler *authHandler) authByPhone() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := request.HandleBody[SendSmsRequest](&w, r)
 		if err != nil {
@@ -49,7 +49,7 @@ func (handler *handler) authByPhone() http.HandlerFunc {
 	}
 }
 
-func (handler *handler) verifyCode() http.HandlerFunc {
+func (handler *authHandler) verifyCode() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := request.HandleBody[LoginRequest](&w, r)
 		if err != nil {
@@ -81,7 +81,7 @@ func (handler *handler) verifyCode() http.HandlerFunc {
 	}
 }
 
-func (handler *handler) authByCall() http.HandlerFunc {
+func (handler *authHandler) authByCall() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := request.HandleBody[SendSmsRequest](&w, r)
 		if err != nil {
