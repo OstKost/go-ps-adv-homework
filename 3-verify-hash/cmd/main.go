@@ -5,6 +5,7 @@ import (
 	"go-ps-adv-homework/configs"
 	"go-ps-adv-homework/internal/auth"
 	"go-ps-adv-homework/internal/link"
+	"go-ps-adv-homework/internal/user"
 	"go-ps-adv-homework/internal/verify"
 	"go-ps-adv-homework/pkg/db"
 	"go-ps-adv-homework/pkg/middleware"
@@ -18,11 +19,15 @@ func main() {
 
 	// Repos
 	linkRepository := link.NewLinkRepository(database)
+	userRepository := user.NewUserRepository(database)
+
+	// Services
+	authService := auth.NewAuthService(userRepository)
 
 	// Handlers
 	router := http.NewServeMux()
-	auth.NewAuthHandler(router, auth.HandlerDependencies{Config: conf})
-	verify.NewVerifyHandler(router, verify.HandlerDependencies{Config: conf})
+	auth.NewAuthHandler(router, auth.AuthHandlerDependencies{Config: conf, AuthService: authService})
+	verify.NewVerifyHandler(router, verify.VerifyHandlerDependencies{Config: conf})
 	link.NewLinkHandler(router, link.HandlerDependencies{Repository: linkRepository})
 
 	// Middlewares

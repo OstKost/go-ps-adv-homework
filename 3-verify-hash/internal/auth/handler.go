@@ -1,16 +1,28 @@
 package auth
 
 import (
-	"fmt"
+	"go-ps-adv-homework/configs"
+	"go-ps-adv-homework/pkg/jwt"
 	"go-ps-adv-homework/pkg/request"
 	"go-ps-adv-homework/pkg/response"
 	"net/http"
 )
 
-type authHandler struct{}
+type authHandler struct {
+	*configs.Config
+	*AuthService
+}
 
-func NewAuthHandler(router *http.ServeMux) {
-	handler := &authHandler{}
+type AuthHandlerDependencies struct {
+	*configs.Config
+	*AuthService
+}
+
+func NewAuthHandler(router *http.ServeMux, dependencies AuthHandlerDependencies) {
+	handler := &authHandler{
+		Config:      dependencies.Config,
+		AuthService: dependencies.AuthService,
+	}
 	router.HandleFunc("POST /auth/register", handler.Register())
 	router.HandleFunc("POST /auth/login", handler.Login())
 }
@@ -21,9 +33,18 @@ func (handler *authHandler) Register() http.HandlerFunc {
 		if err != nil {
 			return
 		}
-		fmt.Println(body) // пока не используем
-		res := LoginResponse{Token: "1234567890"}
-		response.Json(w, res, http.StatusOK)
+		email, err := handler.AuthService.Register(body.Email, body.Password, body.Name)
+		if err != nil {
+			response.Json(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		token, err := jwt.NewJWT(handler.Config.Auth.Secret).SignToken(email)
+		if err != nil {
+			response.Json(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		res := RegisterResponse{Token: token}
+		response.Json(w, res, http.StatusCreated)
 	}
 }
 
@@ -33,8 +54,17 @@ func (handler *authHandler) Login() http.HandlerFunc {
 		if err != nil {
 			return
 		}
-		fmt.Println(body)
-		res := LoginResponse{Token: "1234567890"}
-		response.Json(w, res, http.StatusCreated)
+		email, err := handler.AuthService.Login(body.Email, body.Password)
+		if err != nil {
+			response.Json(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		token, err := jwt.NewJWT(handler.Config.Auth.Secret).SignToken(email)
+		if err != nil {
+			response.Json(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		res := LoginResponse{Token: token}
+		response.Json(w, res, http.StatusOK)
 	}
 }

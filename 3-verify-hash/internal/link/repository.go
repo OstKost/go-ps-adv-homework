@@ -6,17 +6,17 @@ import (
 )
 
 type LinkRepository struct {
-	Database *db.Db
+	database *db.Db
 }
 
 func NewLinkRepository(db *db.Db) *LinkRepository {
 	return &LinkRepository{
-		Database: db,
+		database: db,
 	}
 }
 
 func (repository *LinkRepository) Create(link *Link) (*Link, error) {
-	result := repository.Database.DB.Create(link)
+	result := repository.database.DB.Create(link)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -25,7 +25,7 @@ func (repository *LinkRepository) Create(link *Link) (*Link, error) {
 
 func (repository *LinkRepository) GetByHash(hash string) (*Link, error) {
 	var link Link
-	result := repository.Database.DB.First(&link, "hash = ?", hash)
+	result := repository.database.DB.First(&link, "hash = ?", hash)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -33,7 +33,7 @@ func (repository *LinkRepository) GetByHash(hash string) (*Link, error) {
 }
 
 func (repository *LinkRepository) Update(link *Link) (*Link, error) {
-	result := repository.Database.DB.Clauses(clause.Returning{}).Updates(link)
+	result := repository.database.DB.Clauses(clause.Returning{}).Updates(link)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -41,7 +41,7 @@ func (repository *LinkRepository) Update(link *Link) (*Link, error) {
 }
 
 func (repository *LinkRepository) Delete(id uint) error {
-	result := repository.Database.DB.Delete(&Link{}, id)
+	result := repository.database.DB.Delete(&Link{}, id)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -50,7 +50,7 @@ func (repository *LinkRepository) Delete(id uint) error {
 
 func (repository *LinkRepository) GetById(id uint) (*Link, error) {
 	var link Link
-	result := repository.Database.DB.First(&link, id)
+	result := repository.database.DB.First(&link, id)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -59,7 +59,7 @@ func (repository *LinkRepository) GetById(id uint) (*Link, error) {
 
 func (repository *LinkRepository) GetActiveList(url string) (*[]Link, error) {
 	var links []Link
-	result := repository.Database.DB.Where("deleted_at IS NULL").Where("url LIKE ?", "%"+url+"%").Find(&links)
+	result := repository.database.DB.Where("deleted_at IS NULL").Where("url LIKE ?", "%"+url+"%").Find(&links)
 	if result.Error != nil {
 		return nil, result.Error
 	}
