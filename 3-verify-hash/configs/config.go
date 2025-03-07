@@ -2,7 +2,6 @@ package configs
 
 import (
 	"github.com/joho/godotenv"
-	"log"
 	"os"
 )
 
@@ -36,7 +35,7 @@ type EmailConfig struct {
 func LoadConfig() *Config {
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("Error loading .env file, using default config")
+		panic("Error loading .env file")
 	}
 	return &Config{
 		DB: DBConfig{
