@@ -40,7 +40,7 @@ func LoadConfig() *Config {
 			Dsn: os.Getenv("DSN"),
 		},
 		Auth: AuthConfig{
-			Secret: os.Getenv("TOKEN"),
+			Secret: os.Getenv("SECRET"),
 		},
 		Sms: SmsConfig{
 			ApiId: os.Getenv("SMS_RU_ID"),
