@@ -1,6 +1,8 @@
 package link
 
 import (
+	"fmt"
+	"go-ps-adv-homework/configs"
 	"go-ps-adv-homework/pkg/middleware"
 	"go-ps-adv-homework/pkg/request"
 	"go-ps-adv-homework/pkg/response"
@@ -12,10 +14,12 @@ import (
 
 type handler struct {
 	Repository *LinkRepository
+	*configs.Config
 }
 
 type HandlerDependencies struct {
 	Repository *LinkRepository
+	*configs.Config
 }
 
 func NewLinkHandler(router *http.ServeMux, dependencies HandlerDependencies) {
@@ -25,7 +29,7 @@ func NewLinkHandler(router *http.ServeMux, dependencies HandlerDependencies) {
 	router.HandleFunc("POST /link", handler.CreateLink())
 	router.HandleFunc("GET /{hash}", handler.GoToLink())
 	router.HandleFunc("GET /link", handler.GetList())
-	router.Handle("PATCH /link/{linkId}", middleware.IsAuthed(handler.UpdateLink()))
+	router.Handle("PATCH /link/{linkId}", middleware.IsAuthed(handler.UpdateLink(), dependencies.Config))
 	router.HandleFunc("DELETE /link/{linkId}", handler.DeleteLink())
 }
 
@@ -71,6 +75,12 @@ func (handler *handler) GoToLink() http.HandlerFunc {
 
 func (handler *handler) UpdateLink() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Context
+		ctx := r.Context()
+		email, ok := ctx.Value(middleware.ContextEmailKey).(string)
+		if ok {
+			fmt.Println("ContextEmailKey: ", email)
+		}
 		// Params
 		idString := r.PathValue("linkId")
 		if idString == "" {
