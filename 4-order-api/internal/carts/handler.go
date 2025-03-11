@@ -19,9 +19,9 @@ func NewHandler(router *http.ServeMux, dependencies CartHandlerDependencies) {
 	handler := &cartHandler{
 		Config: dependencies.Config,
 	}
-	router.Handle("POST /carts", middleware.IsAuthed(handler.createCart()))
-	router.Handle("GET /carts/{cartId}", middleware.IsAuthed(handler.getById()))
-	router.Handle("GET /carts/user/{userId}", middleware.IsAuthed(handler.getByUserId()))
+	router.Handle("POST /carts", middleware.IsAuthed(handler.createCart(), dependencies.Config))
+	router.Handle("GET /carts/{cartId}", middleware.IsAuthed(handler.getById(), dependencies.Config))
+	router.Handle("GET /carts/user/{userId}", middleware.IsAuthed(handler.getByUserId(), dependencies.Config))
 }
 
 func (handler *cartHandler) createCart() http.HandlerFunc {
