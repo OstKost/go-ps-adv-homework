@@ -1,21 +1,42 @@
 package middleware
 
 import (
-	"fmt"
+	"context"
+	"go-ps-adv-homework/configs"
 	"go-ps-adv-homework/pkg/jwt"
 	"net/http"
-	"os"
 	"strings"
 )
 
-func IsAuthed(next http.Handler) http.Handler {
+type key string
+
+const (
+	ContextPhoneKey   key = "PhoneKey"
+	ContextSessionKey key = "SessionKey"
+)
+
+func writeUnauthorized(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusUnauthorized)
+	w.Write([]byte(http.StatusText(http.StatusUnauthorized)))
+}
+
+func IsAuthed(next http.Handler, config *configs.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authorization := r.Header.Get("Authorization")
-		token := strings.TrimPrefix(authorization, "Bearer ")
-		err := jwt.NewJWT(os.Getenv("SECRET")).VerifyToken(token)
-		if err != nil {
-			fmt.Println(err)
+		if !strings.HasPrefix(authorization, "Bearer ") {
+			writeUnauthorized(w)
+			return
 		}
-		next.ServeHTTP(w, r)
+		token := strings.TrimPrefix(authorization, "Bearer ")
+		isValid, jwtData := jwt.NewJWT(config.Auth.Secret).ParseToken(token)
+		if !isValid {
+			writeUnauthorized(w)
+			return
+		}
+		ctx := context.Background()
+		ctx = context.WithValue(ctx, ContextPhoneKey, jwtData.Phone)
+		ctx = context.WithValue(ctx, ContextSessionKey, jwtData.Session)
+		req := r.WithContext(ctx)
+		next.ServeHTTP(w, req)
 	})
 }

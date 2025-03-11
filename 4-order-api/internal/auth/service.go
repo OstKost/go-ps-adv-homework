@@ -81,7 +81,10 @@ func (service *AuthService) CheckCode(sessionStr, code string) (string, error, i
 		return "", err, http.StatusUnauthorized
 	}
 	// JWT Token
-	token, err := jwt.NewJWT(service.Config.Auth.Secret).SignToken(session.Session)
+	token, err := jwt.NewJWT(service.Config.Auth.Secret).SignToken(jwt.JWTData{
+		Phone:   session.Phone,
+		Session: session.Session,
+	})
 	if err != nil {
 		return "", err, http.StatusInternalServerError
 	}
