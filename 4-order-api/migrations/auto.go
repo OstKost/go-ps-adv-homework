@@ -4,6 +4,7 @@ import (
 	"github.com/joho/godotenv"
 	"go-ps-adv-homework/internal/carts"
 	"go-ps-adv-homework/internal/products"
+	"go-ps-adv-homework/internal/sessions"
 	"go-ps-adv-homework/internal/user"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -27,6 +28,7 @@ func main() {
 		&products.Product{},
 		&carts.Cart{},
 		&carts.CartItem{},
+		&sessions.Session{},
 	}
 
 	for _, entity := range entities {

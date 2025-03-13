@@ -1,28 +1,22 @@
 package auth
 
 import (
-	"fmt"
-	"go-ps-adv-homework/configs"
 	"go-ps-adv-homework/pkg/request"
 	"go-ps-adv-homework/pkg/response"
-	"go-ps-adv-homework/pkg/smsru"
-	"math/rand"
 	"net/http"
 )
 
 type authHandler struct {
-	Config *configs.Config
+	*AuthService
 }
 
 type AuthHandlerDependencies struct {
-	*configs.Config
+	*AuthService
 }
-
-var codes []string
 
 func NewHandler(router *http.ServeMux, dependencies AuthHandlerDependencies) {
 	handler := &authHandler{
-		Config: dependencies.Config,
+		AuthService: dependencies.AuthService,
 	}
 	router.HandleFunc("POST /auth/authByPhone", handler.authByPhone())
 	router.HandleFunc("POST /auth/authByCall", handler.authByCall())
@@ -31,90 +25,60 @@ func NewHandler(router *http.ServeMux, dependencies AuthHandlerDependencies) {
 
 func (handler *authHandler) authByPhone() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Validate body
 		body, err := request.HandleBody[SendSmsRequest](&w, r)
 		if err != nil {
 			response.Json(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		apiId := handler.Config.Sms.ApiId
-		code := generateCode(6)
-		codes = append(codes, code)
-		smsStatus, err := smsru.Send(apiId, body.Phone, code)
+		// Check user, create session, send code
+		session, err := handler.AuthService.SendCode(body.Phone, false)
 		if err != nil {
 			response.Json(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		res := SendSmsResponse{Message: smsStatus}
+		// Response
+		res := SendSmsResponse{Message: "OK", Session: session.Session, Code: session.Code}
 		response.Json(w, res, http.StatusCreated)
 	}
 }
 
 func (handler *authHandler) verifyCode() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Validate body
 		body, err := request.HandleBody[LoginRequest](&w, r)
 		if err != nil {
 			response.Json(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-
-		found := false
-		for i, h := range codes {
-			if h == body.Code {
-				found = true
-				codes = append(codes[:i], codes[i+1:]...)
-			}
+		// Check session and code
+		token, err, code := handler.AuthService.CheckCode(body.Session, body.Code)
+		if err != nil {
+			response.Json(w, err.Error(), code)
+			return
 		}
-
-		var message string
-		var statusCode int
-		switch found {
-		case true:
-			message = "Code Verified"
-			statusCode = http.StatusOK
-		case false:
-			message = "Wrong Code"
-			statusCode = http.StatusNotFound
-		}
-		token := generateToken(16)
-		res := LoginResponse{Message: message, Token: token}
-		response.Json(w, res, statusCode)
+		// Response
+		res := LoginResponse{Message: "OK", Token: token}
+		response.Json(w, res, code)
 	}
 }
 
 func (handler *authHandler) authByCall() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Validate body
 		body, err := request.HandleBody[SendSmsRequest](&w, r)
 		if err != nil {
 			response.Json(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		apiId := handler.Config.Sms.ApiId
-		code, err := smsru.Call(apiId, body.Phone)
+		// Check user, create session, send code
+		session, err := handler.AuthService.SendCode(body.Phone, true)
 		if err != nil {
 			response.Json(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		codes = append(codes, code)
-		fmt.Println(code)
-		res := SendSmsResponse{Message: "success", Code: code}
+		// Response
+		res := SendSmsResponse{Message: "OK", Session: session.Session, Code: session.Code}
 		response.Json(w, res, http.StatusCreated)
 	}
-}
-
-func generateToken(n int) string {
-	var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
-	return generator(n, letterRunes)
-}
-
-func generateCode(n int) string {
-	var letterRunes = []rune("1234567890")
-	return generator(n, letterRunes)
-}
-
-func generator(n int, letterRunes []rune) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
-	}
-	return string(b)
 }

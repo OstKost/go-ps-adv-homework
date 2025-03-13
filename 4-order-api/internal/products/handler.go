@@ -1,6 +1,7 @@
 package products
 
 import (
+	"fmt"
 	"go-ps-adv-homework/configs"
 	"go-ps-adv-homework/pkg/middleware"
 	"go-ps-adv-homework/pkg/request"
@@ -25,15 +26,21 @@ func NewProductsHandler(router *http.ServeMux, dependencies ProductsHandlerDepen
 		Config:             dependencies.Config,
 		ProductsRepository: dependencies.ProductsRepository,
 	}
-	router.Handle("POST /products", middleware.IsAuthed(handler.createProduct()))
-	router.Handle("PATCH /products/{productId}", middleware.IsAuthed(handler.updateProduct()))
-	router.Handle("DELETE /products/{productId}", middleware.IsAuthed(handler.deleteProduct()))
+	router.Handle("POST /products", middleware.IsAuthed(handler.createProduct(), dependencies.Config))
+	router.Handle("PATCH /products/{productId}", middleware.IsAuthed(handler.updateProduct(), dependencies.Config))
+	router.Handle("DELETE /products/{productId}", middleware.IsAuthed(handler.deleteProduct(), dependencies.Config))
 	router.HandleFunc("GET /products", handler.findProducts())
 	router.HandleFunc("GET /products/{productId}", handler.getProductById())
 }
 
 func (handler *productsHandler) createProduct() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Context
+		ctx := r.Context()
+		phone, _ := ctx.Value(middleware.ContextPhoneKey).(string)
+		session, _ := ctx.Value(middleware.ContextSessionKey).(string)
+		fmt.Println("ContextPhoneKey: ", phone)
+		fmt.Println("ContextSessionKey: ", session)
 		// Validate
 		body, err := request.HandleBody[CreateProductRequest](&w, r)
 		if err != nil {
@@ -59,6 +66,12 @@ func (handler *productsHandler) createProduct() http.HandlerFunc {
 
 func (handler *productsHandler) updateProduct() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Context
+		ctx := r.Context()
+		phone, _ := ctx.Value(middleware.ContextPhoneKey).(string)
+		session, _ := ctx.Value(middleware.ContextSessionKey).(string)
+		fmt.Println("ContextPhoneKey: ", phone)
+		fmt.Println("ContextSessionKey: ", session)
 		// Validate id
 		idString := r.PathValue("productId")
 		if idString == "" {
