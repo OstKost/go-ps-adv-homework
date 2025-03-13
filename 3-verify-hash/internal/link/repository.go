@@ -57,11 +57,33 @@ func (repository *LinkRepository) GetById(id uint) (*Link, error) {
 	return &link, nil
 }
 
-func (repository *LinkRepository) GetActiveList(url string) (*[]Link, error) {
+func (repository *LinkRepository) GetActiveList(url string, limit, offset int) ([]Link, error) {
 	var links []Link
-	result := repository.database.DB.Where("deleted_at IS NULL").Where("url LIKE ?", "%"+url+"%").Find(&links)
+	result := repository.database.DB.
+		Table("links").
+		Where("deleted_at IS NULL").
+		Order("created_at DESC").
+		Where("url LIKE ?", "%"+url+"%").
+		Limit(limit).
+		Offset(offset).
+		Find(&links)
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	return &links, nil
+	return links, nil
+}
+
+func (repository *LinkRepository) Count(url string, limit, offset int) (int64, error) {
+	var count int64
+	result := repository.database.DB.
+		Table("links").
+		Where("deleted_at IS NULL").
+		Where("url LIKE ?", "%"+url+"%").
+		Limit(limit).
+		Offset(offset).
+		Count(&count)
+	if result.Error != nil {
+		return 0, result.Error
+	}
+	return count, nil
 }

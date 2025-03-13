@@ -140,12 +140,25 @@ func (handler *handler) DeleteLink() http.HandlerFunc {
 func (handler *handler) GetList() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query()
-		links, err := handler.Repository.GetActiveList(query.Get("url"))
+		url := query.Get("url")
+		limit, offset := request.GetPaginationParams(query)
+		// Get links
+		links, err := handler.Repository.GetActiveList(url, limit, offset)
 		if err != nil {
 			log.Println(err.Error())
 			response.Json(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		response.Json(w, links, http.StatusOK)
+		// Get links count
+		count, err := handler.Repository.Count(url, limit, offset)
+		if err != nil {
+			log.Println(err.Error())
+			response.Json(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		response.Json(w, GetAllLinksResponse{
+			Links: links,
+			Count: count,
+		}, http.StatusOK)
 	}
 }
