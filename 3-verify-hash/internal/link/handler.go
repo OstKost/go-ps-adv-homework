@@ -3,6 +3,7 @@ package link
 import (
 	"fmt"
 	"go-ps-adv-homework/configs"
+	"go-ps-adv-homework/pkg/event"
 	"go-ps-adv-homework/pkg/middleware"
 	"go-ps-adv-homework/pkg/request"
 	"go-ps-adv-homework/pkg/response"
@@ -13,18 +14,21 @@ import (
 )
 
 type handler struct {
-	Repository *LinkRepository
+	LinkRepository *LinkRepository
 	*configs.Config
+	EventBus *event.EventBus
 }
 
 type HandlerDependencies struct {
-	Repository *LinkRepository
+	LinkRepository *LinkRepository
 	*configs.Config
+	EventBus *event.EventBus
 }
 
 func NewLinkHandler(router *http.ServeMux, dependencies HandlerDependencies) {
 	handler := &handler{
-		Repository: dependencies.Repository,
+		LinkRepository: dependencies.LinkRepository,
+		EventBus:       dependencies.EventBus,
 	}
 	router.HandleFunc("POST /link", handler.CreateLink())
 	router.HandleFunc("GET /{hash}", handler.GoToLink())
@@ -44,14 +48,14 @@ func (handler *handler) CreateLink() http.HandlerFunc {
 		// New link
 		link := NewLink(body.Url)
 		for {
-			existedLink, _ := handler.Repository.GetByHash(link.Hash)
+			existedLink, _ := handler.LinkRepository.GetByHash(link.Hash)
 			if existedLink == nil {
 				break
 			}
 			link.GenerateHash()
 		}
 		// Create
-		createdLink, err := handler.Repository.Create(link)
+		createdLink, err := handler.LinkRepository.Create(link)
 		if err != nil {
 			response.Json(w, err.Error(), http.StatusBadRequest)
 			return
@@ -63,12 +67,17 @@ func (handler *handler) CreateLink() http.HandlerFunc {
 func (handler *handler) GoToLink() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		hash := r.PathValue("hash")
-		link, err := handler.Repository.GetByHash(hash)
+		link, err := handler.LinkRepository.GetByHash(hash)
 		if err != nil {
 			log.Println(err.Error())
 			response.Json(w, err.Error(), http.StatusNotFound)
 			return
 		}
+		go handler.EventBus.Publish(event.Event{
+			Type: event.EventLinkVisited,
+			Data: link.ID,
+		})
+		//handler.StatRepository.AddClick(link.ID)
 		http.Redirect(w, r, link.Url, http.StatusTemporaryRedirect)
 	}
 }
@@ -99,7 +108,7 @@ func (handler *handler) UpdateLink() http.HandlerFunc {
 			return
 		}
 		// Update
-		link, err := handler.Repository.Update(&Link{
+		link, err := handler.LinkRepository.Update(&Link{
 			Model: gorm.Model{ID: uint(id)},
 			Url:   body.Url,
 			Hash:  body.Hash,
@@ -122,13 +131,13 @@ func (handler *handler) DeleteLink() http.HandlerFunc {
 			return
 		}
 		// Check if exists
-		_, err = handler.Repository.GetById(uint(id))
+		_, err = handler.LinkRepository.GetById(uint(id))
 		if err != nil {
 			response.Json(w, err.Error(), http.StatusNotFound)
 			return
 		}
 		// Delete
-		err = handler.Repository.Delete(uint(id))
+		err = handler.LinkRepository.Delete(uint(id))
 		if err != nil {
 			response.Json(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -143,14 +152,14 @@ func (handler *handler) GetList() http.HandlerFunc {
 		url := query.Get("url")
 		limit, offset := request.GetPaginationParams(query)
 		// Get links
-		links, err := handler.Repository.GetActiveList(url, limit, offset)
+		links, err := handler.LinkRepository.GetActiveList(url, limit, offset)
 		if err != nil {
 			log.Println(err.Error())
 			response.Json(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		// Get links count
-		count, err := handler.Repository.Count(url, limit, offset)
+		count, err := handler.LinkRepository.Count(url, limit, offset)
 		if err != nil {
 			log.Println(err.Error())
 			response.Json(w, err.Error(), http.StatusInternalServerError)
