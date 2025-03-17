@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/joho/godotenv"
 	"go-ps-adv-homework/internal/carts"
+	"go-ps-adv-homework/internal/orders"
 	"go-ps-adv-homework/internal/products"
 	"go-ps-adv-homework/internal/sessions"
 	"go-ps-adv-homework/internal/user"
@@ -29,6 +30,8 @@ func main() {
 		&carts.Cart{},
 		&carts.CartItem{},
 		&sessions.Session{},
+		&orders.OrderItem{},
+		&orders.Order{},
 	}
 
 	for _, entity := range entities {

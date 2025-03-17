@@ -7,15 +7,9 @@ import (
 )
 
 type Config struct {
-	Server ServerConfig
-	DB     DBConfig
-	Sms    SmsConfig
-	Auth   AuthConfig
-}
-
-type ServerConfig struct {
-	Host string
-	Port string
+	DB   DBConfig
+	Sms  SmsConfig
+	Auth AuthConfig
 }
 
 type DBConfig struct {
@@ -45,17 +39,5 @@ func LoadConfig() *Config {
 		Sms: SmsConfig{
 			ApiId: os.Getenv("SMS_RU_ID"),
 		},
-		Server: ServerConfig{
-			Host: getEnvWithDefault("HOST", "localhost"),
-			Port: getEnvWithDefault("PORT", "8081"),
-		},
 	}
-}
-
-func getEnvWithDefault(key, defaultValue string) string {
-	value, exists := os.LookupEnv(key)
-	if !exists {
-		return defaultValue
-	}
-	return value
 }
