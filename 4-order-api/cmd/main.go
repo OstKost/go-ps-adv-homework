@@ -8,7 +8,7 @@ import (
 	"go-ps-adv-homework/internal/products"
 	"go-ps-adv-homework/internal/sessions"
 	"go-ps-adv-homework/internal/smsru"
-	"go-ps-adv-homework/internal/user"
+	"go-ps-adv-homework/internal/users"
 	"go-ps-adv-homework/pkg/db"
 	"go-ps-adv-homework/pkg/middleware"
 	"log"
@@ -20,7 +20,7 @@ func App() http.Handler {
 	database := db.Connect(config)
 	// Repositories
 	productsRepository := products.NewProductsRepository(database)
-	userRepository := user.NewUserRepository(database)
+	userRepository := users.NewUserRepository(database)
 	sessionsRepository := sessions.NewSessionRepository(database)
 	ordersRepository := orders.NewOrdersRepository(database)
 	// Services
@@ -44,6 +44,7 @@ func App() http.Handler {
 	orders.NewOrdersHandler(router, orders.OrdersHandlerDependencies{
 		Config:           config,
 		OrdersRepository: ordersRepository,
+		UserRepository:   userRepository,
 	})
 	// Middleware
 	stack := middleware.Chain(

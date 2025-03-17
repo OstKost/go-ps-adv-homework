@@ -2,14 +2,14 @@ package carts
 
 import (
 	"go-ps-adv-homework/internal/products"
-	"go-ps-adv-homework/internal/user"
+	"go-ps-adv-homework/internal/users"
 	"gorm.io/gorm"
 )
 
 type Cart struct {
 	gorm.Model
-	UserId uint      `json:"userId" gorm:"foreignKey:ID"`
-	User   user.User `json:"user" gorm:"foreignKey:UserId"`
+	UserId uint       `json:"userId" gorm:"foreignKey:ID"`
+	User   users.User `json:"users" gorm:"foreignKey:UserId"`
 }
 
 type CartItem struct {

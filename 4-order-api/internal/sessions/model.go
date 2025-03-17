@@ -2,18 +2,18 @@ package sessions
 
 import (
 	"github.com/google/uuid"
-	"go-ps-adv-homework/internal/user"
+	"go-ps-adv-homework/internal/users"
 	"gorm.io/gorm"
 	"math/rand"
 )
 
 type Session struct {
 	gorm.Model
-	UserID  uint      `json:"userId"`
-	User    user.User `gorm:"foreignKey:UserID"`
-	Phone   string    `json:"phone" gorm:"uniqueIndex"`
-	Session string    `json:"session" gorm:"uniqueIndex"`
-	Code    string    `json:"code"`
+	UserID  uint       `json:"userId"`
+	User    users.User `gorm:"foreignKey:UserID"`
+	Phone   string     `json:"phone" gorm:"uniqueIndex"`
+	Session string     `json:"session" gorm:"uniqueIndex"`
+	Code    string     `json:"code"`
 }
 
 func NewSession(userId uint, phone, code string) (*Session, error) {
