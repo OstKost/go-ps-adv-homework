@@ -3,13 +3,14 @@ package auth
 import (
 	"errors"
 	"go-ps-adv-homework/internal/user"
+	"go-ps-adv-homework/pkg/di"
 )
 
 type AuthService struct {
-	*user.UserRepository
+	UserRepository di.IUserRepository
 }
 
-func NewAuthService(repository *user.UserRepository) *AuthService {
+func NewAuthService(repository di.IUserRepository) *AuthService {
 	return &AuthService{UserRepository: repository}
 }
 

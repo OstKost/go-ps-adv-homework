@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-type authHandler struct {
+type AuthHandler struct {
 	*configs.Config
 	*AuthService
 }
@@ -19,15 +19,15 @@ type AuthHandlerDependencies struct {
 }
 
 func NewAuthHandler(router *http.ServeMux, dependencies AuthHandlerDependencies) {
-	handler := &authHandler{
+	authHandler := &AuthHandler{
 		Config:      dependencies.Config,
 		AuthService: dependencies.AuthService,
 	}
-	router.HandleFunc("POST /auth/register", handler.Register())
-	router.HandleFunc("POST /auth/login", handler.Login())
+	router.HandleFunc("POST /auth/register", authHandler.Register())
+	router.HandleFunc("POST /auth/login", authHandler.Login())
 }
 
-func (handler *authHandler) Register() http.HandlerFunc {
+func (handler *AuthHandler) Register() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		body, err := request.HandleBody[RegisterRequest](&w, req)
 		if err != nil {
@@ -48,7 +48,7 @@ func (handler *authHandler) Register() http.HandlerFunc {
 	}
 }
 
-func (handler *authHandler) Login() http.HandlerFunc {
+func (handler *AuthHandler) Login() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := request.HandleBody[LoginRequest](&w, r)
 		if err != nil {

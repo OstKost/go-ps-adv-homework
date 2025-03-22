@@ -50,17 +50,5 @@ func LoadConfig() *Config {
 			SMTPHost: os.Getenv("EMAIL_SMTP_HOST"),
 			SMTPPort: os.Getenv("EMAIL_SMTP_PORT"),
 		},
-		Server: ServerConfig{
-			Host: getEnvWithDefault("HOST", "localhost"),
-			Port: getEnvWithDefault("PORT", "8081"),
-		},
 	}
-}
-
-func getEnvWithDefault(key, defaultValue string) string {
-	value := os.Getenv(key)
-	if value == "" {
-		return defaultValue
-	}
-	return value
 }

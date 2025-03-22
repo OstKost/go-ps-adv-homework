@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"go-ps-adv-homework/configs"
 	"go-ps-adv-homework/internal/auth"
 	"go-ps-adv-homework/internal/link"
@@ -15,7 +14,7 @@ import (
 	"net/http"
 )
 
-func main() {
+func App() http.Handler {
 	conf := configs.LoadConfig()
 	database := db.NewDB(conf)
 	eventBus := event.NewEventBus()
@@ -47,15 +46,20 @@ func main() {
 		middleware.Logger,
 		middleware.CORS,
 	)
-	server := http.Server{
-		Addr: fmt.Sprintf("%s:%s", conf.Server.Host, conf.Server.Port),
-		//Handler: middleware.CORS(middleware.Logger(router)),
-		Handler: stack(router),
-	}
 
 	go statService.AddClick()
 
-	log.Printf("Server is listening on %s:%s", conf.Server.Host, conf.Server.Port)
+	return stack(router)
+}
+
+func main() {
+	app := App()
+	server := http.Server{
+		Addr:    ":8080",
+		Handler: app,
+	}
+
+	log.Printf("Server is listening on localhost:8080")
 	err := server.ListenAndServe()
 	if err != nil {
 		log.Fatalln(err)
