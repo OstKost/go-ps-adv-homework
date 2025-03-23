@@ -31,11 +31,11 @@ func (service *OrdersService) CreateOrder(phone string, body di.CreateOrderReque
 		return nil, errors.New("пользователь не найден")
 	}
 	// 2. Подсчет общей суммы заказа и формирование списка товаров
-	var total int
+	var total float64
 	var items []di.OrderItem
 
 	for _, item := range body.Items {
-		total += item.Price * item.Count
+		total += item.Price * float64(item.Count)
 		items = append(items, di.OrderItem{
 			ProductID: item.ProductID,
 			Count:     item.Count,
