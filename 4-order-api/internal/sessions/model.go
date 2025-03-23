@@ -10,7 +10,7 @@ import (
 type Session struct {
 	gorm.Model
 	UserID  uint       `json:"userId"`
-	User    users.User `gorm:"foreignKey:UserID"`
+	User    users.User `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Phone   string     `json:"phone" gorm:"uniqueIndex"`
 	Session string     `json:"session" gorm:"uniqueIndex"`
 	Code    string     `json:"code"`

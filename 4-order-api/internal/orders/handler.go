@@ -2,7 +2,7 @@ package orders
 
 import (
 	"go-ps-adv-homework/configs"
-	"go-ps-adv-homework/internal/users"
+	"go-ps-adv-homework/pkg/di"
 	"go-ps-adv-homework/pkg/middleware"
 	"go-ps-adv-homework/pkg/request"
 	"go-ps-adv-homework/pkg/response"
@@ -15,21 +15,18 @@ import (
 
 type ordersHandler struct {
 	*configs.Config
-	*OrdersRepository
-	*users.UserRepository
+	OrdersService di.IOrdersService
 }
 
 type OrdersHandlerDependencies struct {
 	*configs.Config
-	*OrdersRepository
-	*users.UserRepository
+	OrdersService di.IOrdersService
 }
 
 func NewOrdersHandler(router *http.ServeMux, dependencies OrdersHandlerDependencies) {
 	handler := &ordersHandler{
-		Config:           dependencies.Config,
-		OrdersRepository: dependencies.OrdersRepository,
-		UserRepository:   dependencies.UserRepository,
+		Config:        dependencies.Config,
+		OrdersService: dependencies.OrdersService,
 	}
 	router.Handle("POST /orders", middleware.IsAuthed(handler.createOrder(), dependencies.Config))
 	router.Handle("GET /orders/{orderId}", middleware.IsAuthed(handler.getOrderById(), dependencies.Config))
@@ -42,41 +39,18 @@ func (handler *ordersHandler) createOrder() http.HandlerFunc {
 		ctx := r.Context()
 		phone, _ := ctx.Value(middleware.ContextPhoneKey).(string)
 		// Validate
-		body, err := request.HandleBody[CreateOrderRequest](&w, r)
+		body, err := request.HandleBody[di.CreateOrderRequest](&w, r)
 		if err != nil {
 			response.Json(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		// Prepare data
-		user, err := handler.UserRepository.GetUserByPhone(phone)
+		// Create order
+		createdOrder, err := handler.OrdersService.CreateOrder(phone, *body)
 		if err != nil {
 			response.Json(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		order := NewOrder(user.ID, body.Items)
-		//var items []OrderItem
-		//for _, item := range body.Items {
-		//	items = append(items, OrderItem{
-		//		ProductId: item.ProductId,
-		//		Count:     item.Count,
-		//		Price:     item.Price,
-		//	})
-		//}
-		//var total int
-		//for _, item := range items {
-		//	total += item.Price * item.Count
-		//}
-		//order := &Order{
-		//	UserId: user.ID,
-		//	Items:  items,
-		//	Total:  total,
-		//}
-		// Action
-		createdOrder, err := handler.OrdersRepository.Create(order)
-		if err != nil {
-			response.Json(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+
 		response.Json(w, createdOrder, http.StatusCreated)
 	}
 }
@@ -95,7 +69,7 @@ func (handler *ordersHandler) getOrderById() http.HandlerFunc {
 			return
 		}
 		// Action
-		order, err := handler.OrdersRepository.GetById(uint(id))
+		order, err := handler.OrdersService.GetOrderByID(uint(id))
 		if err != nil {
 			response.Json(w, err.Error(), http.StatusNotFound)
 			return
@@ -126,24 +100,12 @@ func (handler *ordersHandler) findUserOrders() http.HandlerFunc {
 		// Context
 		ctx := r.Context()
 		phone, _ := ctx.Value(middleware.ContextPhoneKey).(string)
-		user, err := handler.UserRepository.GetUserByPhone(phone)
+		// Get orders
+		orders, total, err := handler.OrdersService.GetUserOrders(phone, from, to, limit, offset)
 		if err != nil {
 			response.Json(w, err.Error(), http.StatusInternalServerError)
-			return
 		}
-
-		orders, err := handler.OrdersRepository.Find(from, to, user.ID, limit, offset)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		total, err := handler.OrdersRepository.Count(from, to, user.ID)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		responseData := response.PreparePaginatedResponse[Order](*orders, total, offset, limit)
+		responseData := response.PreparePaginatedResponse[di.Order](*orders, total, offset, limit)
 		response.Json(w, responseData, http.StatusOK)
 	}
 }

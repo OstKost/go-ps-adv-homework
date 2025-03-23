@@ -31,6 +31,10 @@ func App() http.Handler {
 		SessionRepository: sessionsRepository,
 		SmsService:        smsService,
 	})
+	ordersService := orders.NewOrdersService(orders.OrdersServiceDependencies{
+		UserRepository:   userRepository,
+		OrdersRepository: ordersRepository,
+	})
 	// Handlers
 	router := http.NewServeMux()
 	auth.NewHandler(router, auth.AuthHandlerDependencies{
@@ -42,9 +46,8 @@ func App() http.Handler {
 	})
 	carts.NewCartHandler(router, carts.CartHandlerDependencies{Config: config})
 	orders.NewOrdersHandler(router, orders.OrdersHandlerDependencies{
-		Config:           config,
-		OrdersRepository: ordersRepository,
-		UserRepository:   userRepository,
+		Config:        config,
+		OrdersService: ordersService,
 	})
 	// Middleware
 	stack := middleware.Chain(

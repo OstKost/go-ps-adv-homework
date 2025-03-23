@@ -3,10 +3,10 @@ package main
 import (
 	"github.com/joho/godotenv"
 	"go-ps-adv-homework/internal/carts"
-	"go-ps-adv-homework/internal/orders"
 	"go-ps-adv-homework/internal/products"
 	"go-ps-adv-homework/internal/sessions"
 	"go-ps-adv-homework/internal/users"
+	"go-ps-adv-homework/pkg/di"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"os"
@@ -26,12 +26,12 @@ func main() {
 
 	entities := []interface{}{
 		&users.User{},
-		&products.Product{},
-		&carts.Cart{},
-		&carts.CartItem{},
 		&sessions.Session{},
-		&orders.OrderItem{},
-		&orders.Order{},
+		&di.Order{},
+		&di.OrderItem{},
+		&products.Product{},
+		&carts.CartItem{},
+		&carts.Cart{},
 	}
 
 	for _, entity := range entities {
