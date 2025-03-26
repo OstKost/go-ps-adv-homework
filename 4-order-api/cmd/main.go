@@ -4,23 +4,25 @@ import (
 	"go-ps-adv-homework/configs"
 	"go-ps-adv-homework/internal/auth"
 	"go-ps-adv-homework/internal/carts"
+	"go-ps-adv-homework/internal/orders"
 	"go-ps-adv-homework/internal/products"
 	"go-ps-adv-homework/internal/sessions"
 	"go-ps-adv-homework/internal/smsru"
-	"go-ps-adv-homework/internal/user"
+	"go-ps-adv-homework/internal/users"
 	"go-ps-adv-homework/pkg/db"
 	"go-ps-adv-homework/pkg/middleware"
 	"log"
 	"net/http"
 )
 
-func main() {
+func App() http.Handler {
 	config := configs.LoadConfig()
 	database := db.Connect(config)
 	// Repositories
 	productsRepository := products.NewProductsRepository(database)
-	userRepository := user.NewUserRepository(database)
+	userRepository := users.NewUserRepository(database)
 	sessionsRepository := sessions.NewSessionRepository(database)
+	ordersRepository := orders.NewOrdersRepository(database)
 	// Services
 	smsService := smsru.NewSmsRuService(config.Sms.ApiId)
 	authService := auth.NewAuthService(auth.AuthServiceDependencies{
@@ -28,6 +30,10 @@ func main() {
 		UserRepository:    userRepository,
 		SessionRepository: sessionsRepository,
 		SmsService:        smsService,
+	})
+	ordersService := orders.NewOrdersService(orders.OrdersServiceDependencies{
+		UserRepository:   userRepository,
+		OrdersRepository: ordersRepository,
 	})
 	// Handlers
 	router := http.NewServeMux()
@@ -38,17 +44,26 @@ func main() {
 		Config:             config,
 		ProductsRepository: productsRepository,
 	})
-	carts.NewHandler(router, carts.CartHandlerDependencies{Config: config})
+	carts.NewCartHandler(router, carts.CartHandlerDependencies{Config: config})
+	orders.NewOrdersHandler(router, orders.OrdersHandlerDependencies{
+		Config:        config,
+		OrdersService: ordersService,
+	})
 	// Middleware
 	stack := middleware.Chain(
 		middleware.CORS,
 		middleware.Logger,
 	)
+	return stack(router)
+}
+
+func main() {
+	app := App()
 	server := http.Server{
-		Addr:    config.Server.Host + ":" + config.Server.Port,
-		Handler: stack(router),
+		Addr:    ":8080",
+		Handler: app,
 	}
-	log.Printf("Server is listening on %s:%s", config.Server.Host, config.Server.Port)
+	log.Printf("Server is listening on localhost:8080")
 	err := server.ListenAndServe()
 	if err != nil {
 		log.Fatalln(err)

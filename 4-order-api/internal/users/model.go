@@ -1,4 +1,4 @@
-package user
+package users
 
 import (
 	"gorm.io/gorm"
@@ -10,8 +10,6 @@ type User struct {
 	Phone     string    `json:"phone" gorm:"uniqueIndex"`
 	Name      string    `json:"name" gorm:"size:100"`
 	Birthdate time.Time `json:"birthdate" gorm:"type:date"`
-	Session   string    `json:"session"`
-	Code      string    `json:"code"`
 }
 
 func NewUser(phone string, name string, birthdate time.Time) *User {

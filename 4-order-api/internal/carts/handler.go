@@ -15,7 +15,7 @@ type CartHandlerDependencies struct {
 	*configs.Config
 }
 
-func NewHandler(router *http.ServeMux, dependencies CartHandlerDependencies) {
+func NewCartHandler(router *http.ServeMux, dependencies CartHandlerDependencies) {
 	handler := &cartHandler{
 		Config: dependencies.Config,
 	}
@@ -39,5 +39,17 @@ func (handler *cartHandler) getById() http.HandlerFunc {
 func (handler *cartHandler) getByUserId() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("getByUserId")
+	}
+}
+
+func (handler *cartHandler) addProduct() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("addProduct")
+	}
+}
+
+func (handler *cartHandler) removeProduct() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("removeProduct")
 	}
 }

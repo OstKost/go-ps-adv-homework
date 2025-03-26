@@ -4,21 +4,21 @@ import (
 	"go-ps-adv-homework/configs"
 	"go-ps-adv-homework/internal/sessions"
 	"go-ps-adv-homework/internal/smsru"
-	"go-ps-adv-homework/internal/user"
+	"go-ps-adv-homework/internal/users"
 	"go-ps-adv-homework/pkg/jwt"
 	"net/http"
 )
 
 type AuthService struct {
 	*configs.Config
-	*user.UserRepository
+	*users.UserRepository
 	*sessions.SessionRepository
 	SmsService *smsru.SmsruService
 }
 
 type AuthServiceDependencies struct {
 	*configs.Config
-	*user.UserRepository
+	*users.UserRepository
 	*sessions.SessionRepository
 	SmsService *smsru.SmsruService
 }
@@ -37,7 +37,7 @@ func NewAuthService(dependencies AuthServiceDependencies) *AuthService {
 }
 
 func (service *AuthService) SendCode(phone string, callToPhone bool) (*sessions.Session, error) {
-	// Check user and create user
+	// Check users and create users
 	foundedUser, err := service.UserRepository.GetOrCreateUser(phone)
 	if err != nil {
 		return nil, err

@@ -2,20 +2,21 @@ package carts
 
 import (
 	"go-ps-adv-homework/internal/products"
-	"go-ps-adv-homework/internal/user"
+	"go-ps-adv-homework/internal/users"
 	"gorm.io/gorm"
 )
 
 type Cart struct {
 	gorm.Model
-	UserId uint      `json:"userId" gorm:"foreignKey:ID"`
-	User   user.User `json:"user" gorm:"foreignKey:UserId"`
+	UserId uint       `json:"userId"`
+	User   users.User `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
 type CartItem struct {
-	CartId    uint             `json:"cartId" gorm:"foreignKey:ID; uniqueIndex:cart_item"`
-	Cart      Cart             `json:"cart" gorm:"foreignKey:CartId"`
-	ProductId uint             `json:"productId" gorm:"foreignKey:ID; uniqueIndex:cart_item"`
-	Product   products.Product `json:"product" gorm:"foreignKey:ProductId"`
+	ID        uint             `json:"id" gorm:"primaryKey,autoIncrement"`
+	CartId    uint             `json:"cartId"`
+	Cart      Cart             `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	ProductId uint             `json:"productId"`
+	Product   products.Product `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Count     int              `json:"count" gorm:"default:1"`
 }

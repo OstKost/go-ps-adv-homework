@@ -5,7 +5,8 @@ import (
 	"go-ps-adv-homework/internal/carts"
 	"go-ps-adv-homework/internal/products"
 	"go-ps-adv-homework/internal/sessions"
-	"go-ps-adv-homework/internal/user"
+	"go-ps-adv-homework/internal/users"
+	"go-ps-adv-homework/pkg/di"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"os"
@@ -24,11 +25,13 @@ func main() {
 	}
 
 	entities := []interface{}{
-		&user.User{},
-		&products.Product{},
-		&carts.Cart{},
-		&carts.CartItem{},
+		&users.User{},
 		&sessions.Session{},
+		&di.Order{},
+		&di.OrderItem{},
+		&products.Product{},
+		&carts.CartItem{},
+		&carts.Cart{},
 	}
 
 	for _, entity := range entities {
