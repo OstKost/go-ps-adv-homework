@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/joho/godotenv"
+	"github.com/stretchr/testify/require"
 	"go-ps-adv-homework/internal/carts"
 	"go-ps-adv-homework/internal/products"
 	"go-ps-adv-homework/internal/sessions"
@@ -144,10 +145,10 @@ func removeData(db *gorm.DB) {
 func TestCreateOrderSuccess(t *testing.T) {
 	db := initDb()
 	initData(db)
-	defer removeData(db)
+	t.Cleanup(func() { removeData(db) })
 
 	ts := httptest.NewServer(App())
-	defer ts.Close()
+	t.Cleanup(func() { ts.Close() })
 
 	var testProducts []products.Product
 	db.Find(&testProducts)
@@ -168,59 +169,57 @@ func TestCreateOrderSuccess(t *testing.T) {
 		Phone:   "+7911111111",
 		Session: "0000000000",
 	})
+	require.NoError(t, err)
 
-	req, err := http.NewRequest("POST", ts.URL+"/orders", bytes.NewBuffer(data))
-	if err != nil {
-		t.Fatal(err)
-	}
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", "Bearer "+token)
+	req, err := newRequest("POST", ts.URL+"/orders", data, token)
+	require.NoError(t, err)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer res.Body.Close()
+	require.NoError(t, err)
+	t.Cleanup(func() { res.Body.Close() })
 
-	if res.StatusCode != http.StatusCreated {
-		t.Fatalf("Expected %d status code, but got %d", http.StatusCreated, res.StatusCode)
-	}
+	require.Equal(t, http.StatusCreated, res.StatusCode, "unexpected status code")
 
 	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+
 	var resData di.Order
 	err = json.Unmarshal(body, &resData)
+	require.NoError(t, err)
+
 	// Check Order is created
-	if resData.ID == 0 {
-		t.Fatal("Order ID is empty")
-	}
+	require.NotEqual(t, 0, resData.ID, "Order ID should not be empty")
+
 	// Check Order Items
-	if len(resData.Items) != len(testItems) {
-		t.Fatalf("Expected %d items, but got %d", len(testItems), len(resData.Items))
-	}
+	require.Len(t, resData.Items, len(testItems), "unexpected items count")
+
 	// Check total price with order items
 	totalPrice := 0.0
 	for _, item := range resData.Items {
 		totalPrice += item.Price
 	}
-	if totalPrice != resData.Total {
-		t.Fatalf("Expected total price is %f, but got %f", totalPrice, resData.Total)
-	}
+	require.Equal(t, totalPrice, resData.Total, "total price mismatch")
+
 	// Check total price with test items
 	totalPrice = 0.0
 	for _, item := range testItems {
 		totalPrice += item.Price
 	}
-	if totalPrice != resData.Total {
-		t.Fatalf("Expected total price is %f, but got %f", totalPrice, resData.Total)
-	}
+	require.Equal(t, totalPrice, resData.Total, "total price mismatch")
+
 	// Check right order items
 	for i, item := range resData.Items {
-		if item.ProductID != testItems[i].ProductID {
-			t.Fatalf("Expected product ID is %d, but got %d", item.ProductID, testItems[i].ProductID)
-		}
+		require.Equal(t, testItems[i].ProductID, item.ProductID, "product ID mismatch")
 	}
+}
+
+func newRequest(method, url string, data []byte, token string) (*http.Request, error) {
+	req, err := http.NewRequest(method, url, bytes.NewBuffer(data))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+token)
+	return req, nil
 }
