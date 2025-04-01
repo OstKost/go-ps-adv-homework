@@ -1,4 +1,4 @@
-package user
+package users
 
 import (
 	"go-ps-adv-homework/pkg/db"

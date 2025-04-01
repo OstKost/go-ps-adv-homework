@@ -31,7 +31,7 @@ func (handler *authHandler) authByPhone() http.HandlerFunc {
 			response.Json(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		// Check user, create session, send code
+		// Check users, create session, send code
 		session, err := handler.AuthService.SendCode(body.Phone, false)
 		if err != nil {
 			response.Json(w, err.Error(), http.StatusInternalServerError)
@@ -71,7 +71,7 @@ func (handler *authHandler) authByCall() http.HandlerFunc {
 			response.Json(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		// Check user, create session, send code
+		// Check users, create session, send code
 		session, err := handler.AuthService.SendCode(body.Phone, true)
 		if err != nil {
 			response.Json(w, err.Error(), http.StatusInternalServerError)
